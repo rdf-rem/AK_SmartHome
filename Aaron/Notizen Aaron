@@ -1,0 +1,9 @@
+first AI Promt:
+    please generate a working code based on the content of these PDF files. create a new folder called "Code" in the folder "Aaron"
+correction (Folder "Code" and file "main.py" created in advance):
+    please generate a working code in main.py based on the content of these PDF files
+continuation:
+    Please continue with step 1. and 2. and give me a short summary of what you just did
+report:
+    can you give me a text file called "prompt_report.txt" containing a short summary about what you did during the last 2 prompts
+
