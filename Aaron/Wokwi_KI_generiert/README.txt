@@ -16,6 +16,9 @@ So verwendest du es:
 3. Starte die Simulation.
 
 
+Problem: nichts angeschlossen, muss erst manuell gemacht werden
+-> KI um Schaltplan gebeten
+
 Schaltplan und Anschlüsse:
 - Arduino Pin 2 -> Taster (einseitig)
 - Taster anderer Seite -> GND
@@ -40,7 +43,6 @@ Hier ist die kurze Checkliste für Wokwi:
 6. Im Serial Monitor solltest du Nachrichten wie:
 - „Status: Tür offen“
 - „Status: Tür geschlossen“
-
 
 Wenn etwas nicht funktioniert, schau zuerst auf:
 - richtige Pin-Verbindungen im Diagramm
