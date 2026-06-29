@@ -1,0 +1,39 @@
+{
+  "mqtt": {
+    "broker": "broker.hivemq.com",
+    "port": 1883,
+    "gesture_topic": "aaron/smarthome/gesture",
+    "debug_topic": "aaron/smarthome/debug"
+  },
+  "mediapipe": {
+    "detection_confidence": 0.7,
+    "tracking_confidence": 0.5,
+    "max_num_hands": 2
+  },
+  "gesture_recognition": {
+    "cooldown_seconds": 0.5,
+    "gestures": {
+      "PEACE": {
+        "enabled": true,
+        "description": "Zeige- und Mittelfinger oben"
+      },
+      "THUMBS_UP": {
+        "enabled": true,
+        "description": "Daumen nach oben"
+      },
+      "OPEN_PALM": {
+        "enabled": true,
+        "description": "Offene Hand"
+      },
+      "FIST": {
+        "enabled": true,
+        "description": "Geschlossene Faust"
+      }
+    }
+  },
+  "camera": {
+    "flip": true,
+    "show_fps": true,
+    "display_landmarks": true
+  }
+}
