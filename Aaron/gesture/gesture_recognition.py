@@ -11,6 +11,7 @@ Projekt: Smart Home Steuerung mittels Gestenerkennung
 """
 
 import cv2
+import time
 
 from gesture.camera import Camera
 from gesture.recognizer import Recognizer
@@ -36,6 +37,7 @@ def main():
     )
 
     last_gesture = ""
+    last_gesture_time = 0
 
     try:
 
@@ -55,7 +57,12 @@ def main():
 
             if gesture:
 
-                if gesture != last_gesture:
+                current_time = time.time()
+
+                if (
+                    gesture != last_gesture
+                    or current_time - last_gesture_time >= config.cooldown
+                ):
 
                     print("👉", gesture)
 
@@ -65,6 +72,7 @@ def main():
                     )
 
                     last_gesture = gesture
+                    last_gesture_time = current_time
 
                 cv2.putText(
                     frame,

@@ -29,9 +29,24 @@ def on_connect(client, userdata, flags, reason_code, properties=None):
 def on_message(client, userdata, message):
     """Wird bei jeder empfangenen Nachricht aufgerufen."""
 
-    gesture = message.payload.decode("utf-8")
+    gesture = message.payload.decode()
 
-    print(f"📩 Empfangen: {gesture}")
+    print(f"\n📩 Empfangen: {gesture}")
+
+    if gesture == "Open_Palm":
+        print("💡 Licht EIN")
+
+    elif gesture == "Closed_Fist":
+        print("💡 Licht AUS")
+
+    elif gesture == "Thumb_Up":
+        print("🎵 Musik EIN")
+
+    elif gesture == "Victory":
+        print("📺 TV-Modus")
+
+    else:
+        print("❓ Unbekannte Geste")
 
 
 def main():
