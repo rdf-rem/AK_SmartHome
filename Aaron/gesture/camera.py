@@ -1,8 +1,20 @@
+"""
+camera.py
+
+Verwaltet den Zugriff auf die Webcam.
+
+Autor: Aaron
+Projekt: Smart Home Steuerung mittels Gestenerkennung
+"""
+
 import cv2
 
 
 class Camera:
-    def __init__(self, camera_index=0):
+    """Stellt Bilder der Webcam bereit."""
+
+    def __init__(self, camera_index=0, flip=True):
+        self.flip = flip
         self.cap = cv2.VideoCapture(camera_index)
 
         if not self.cap.isOpened():
@@ -14,11 +26,10 @@ class Camera:
         if not success:
             return None
 
-        # Spiegeln für natürliche Darstellung
-        frame = cv2.flip(frame, 1)
+        if self.flip:
+            frame = cv2.flip(frame, 1)
 
         return frame
 
     def release(self):
         self.cap.release()
-        cv2.destroyAllWindows()

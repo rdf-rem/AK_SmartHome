@@ -6,55 +6,93 @@ Hauptprogramm.
 Startet Kamera und Gestenerkennung.
 
 Autor: Aaron
+Unterstützung: ChatGPT
 Projekt: Smart Home Steuerung mittels Gestenerkennung
 """
 
 import cv2
 
-from camera import Camera
-from recognizer import Recognizer
+from gesture.camera import Camera
+from gesture.recognizer import Recognizer
+
+from config import Config
+from mqtt.mqtt_client import MQTTClient
 
 
-camera = Camera()
-recognizer = Recognizer("models/gesture_recognizer.task")
+def main():
 
-print("✅ System gestartet")
-print("Drücke q zum Beenden")
+    config = Config()
 
-last_gesture = ""
+    camera = Camera(
+        config.camera_index,
+        config.camera_flip
+    )
 
-while True:
+    recognizer = Recognizer(config.model_path)
 
-    frame = camera.read()
+    mqtt = MQTTClient(
+        config.mqtt_broker,
+        config.mqtt_port
+    )
 
-    if frame is None:
-        break
+    last_gesture = ""
 
-    gesture = recognizer.recognize(frame)
+    try:
 
-    if gesture:
+        mqtt.connect()
 
-        if gesture != last_gesture:
+        print("✅ System gestartet")
+        print("Drücke q zum Beenden")
 
-            print("👉", gesture)
+        while True:
 
-            last_gesture = gesture
+            frame = camera.read()
 
-        cv2.putText(
-            frame,
-            gesture,
-            (20, 40),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            1,
-            (0, 255, 0),
-            2
-        )
+            if frame is None:
+                break
 
-    cv2.imshow("Gesture Recognition", frame)
+            gesture = recognizer.recognize(frame)
 
-    if cv2.waitKey(1) & 0xFF == ord("q"):
-        break
+            if gesture:
 
-camera.release()
+                if gesture != last_gesture:
 
-print("Programm beendet")
+                    print("👉", gesture)
+
+                    mqtt.publish(
+                        config.gesture_topic,
+                        gesture
+                    )
+
+                    last_gesture = gesture
+
+                cv2.putText(
+                    frame,
+                    gesture,
+                    (20, 40),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1,
+                    (0, 255, 0),
+                    2
+                )
+
+            cv2.imshow("Gesture Recognition", frame)
+
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
+
+    except Exception as error:
+        print(f"❌ Fehler: {error}")
+
+    finally:
+
+        mqtt.disconnect()
+
+        camera.release()
+        cv2.destroyAllWindows()
+
+        print("Programm beendet")
+
+
+if __name__ == "__main__":
+    main()
