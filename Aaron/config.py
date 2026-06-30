@@ -57,8 +57,15 @@ class Config:
             "debug"
         )
 
-        # Gestenerkennung
+        # Gestenerkennung (Nach ca. 5 Sekunden / 150 Frames ohne erkannte Geste wird der Gestenstatus zurückgesetzt.)
         self.cooldown = data["gesture_recognition"].get(
             "cooldown_seconds",
             0.5
         )
+
+        self.no_gesture_reset_frames = data["gesture_recognition"].get(
+            "no_gesture_reset_frames",
+            150
+        )
+
+        # ACHTUNG: Standardwert 150 (Fallback), falls "no_gesture_reset_frames" nicht in der config.json definiert wurde.

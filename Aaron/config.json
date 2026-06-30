@@ -13,6 +13,7 @@
   },
   "gesture_recognition": {
     "cooldown_seconds": 0.5,
+    "no_gesture_reset_frames": 150,
     "gestures": {
       "PEACE": {
         "enabled": true,

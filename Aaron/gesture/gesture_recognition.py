@@ -11,7 +11,6 @@ Projekt: Smart Home Steuerung mittels Gestenerkennung
 """
 
 import cv2
-import time
 
 from gesture.camera import Camera
 from gesture.recognizer import Recognizer
@@ -37,7 +36,8 @@ def main():
     )
 
     last_gesture = ""
-    last_gesture_time = 0
+    gesture_active = False
+    no_gesture_frames = 0
 
     try:
 
@@ -56,13 +56,10 @@ def main():
             gesture = recognizer.recognize(frame)
 
             if gesture:
+                
+                no_gesture_frames = 0
 
-                current_time = time.time()
-
-                if (
-                    gesture != last_gesture
-                    or current_time - last_gesture_time >= config.cooldown
-                ):
+                if not gesture_active or gesture != last_gesture:
 
                     print("👉", gesture)
 
@@ -72,7 +69,7 @@ def main():
                     )
 
                     last_gesture = gesture
-                    last_gesture_time = current_time
+                    gesture_active = True
 
                 cv2.putText(
                     frame,
@@ -83,6 +80,15 @@ def main():
                     (0, 255, 0),
                     2
                 )
+
+            else:
+
+                no_gesture_frames += 1
+
+                # Nach einer längeren Zeit ohne erkannte Geste wird der Gestenstatus
+                # zurückgesetzt. Die Anzahl der Frames wird in der config.json definiert.
+                if no_gesture_frames >= config.no_gesture_reset_frames:
+                    gesture_active = False
 
             cv2.imshow("Gesture Recognition", frame)
 
