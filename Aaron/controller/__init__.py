@@ -1,5 +1,5 @@
 def __init__(self):
-
+    
     self.light = Light()
     self.music = Music()
     self.tv = TV()

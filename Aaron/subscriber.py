@@ -49,10 +49,12 @@ def on_message(client, userdata, message):
     elif topic == config.temperature_topic:
 
         controller.temperature.update(float(payload))
+        controller.save_state()
 
     elif topic == config.motion_topic:
 
         controller.motion_sensor.update(payload == "motion")
+        controller.save_state()
 
 
 def main():

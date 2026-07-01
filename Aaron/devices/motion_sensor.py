@@ -12,11 +12,11 @@ Projekt: Smart Home Steuerung mittels Gestenerkennung
 class MotionSensor:
 
     def __init__(self):
-        self.motion_detected = False
+        self.detected = False
 
     def update(self, detected):
 
-        self.motion_detected = detected
+        self.detected = detected
 
         if detected:
             print("🚶 Bewegung erkannt")

@@ -8,6 +8,9 @@ Unterstützung: ChatGPT
 Projekt: Smart Home Steuerung mittels Gestenerkennung
 """
 
+import json
+from pathlib import Path
+
 from devices.light import Light
 from devices.blinds import Blinds
 from devices.temperature import Temperature
@@ -23,6 +26,10 @@ class SmartHomeController:
         self.temperature = Temperature()
         self.motion_sensor = MotionSensor()
 
+        self.last_gesture = "-"
+
+        self.state_file = Path("data/state.json")
+
         self.actions = {
             "Open_Palm": self.light_on,
             "Closed_Fist": self.light_off,
@@ -33,10 +40,13 @@ class SmartHomeController:
     def handle_gesture(self, gesture):
         """Führt die zur Geste gehörende Aktion aus."""
 
+        self.last_gesture = gesture
+
         action = self.actions.get(gesture)
 
         if action:
             action()
+            self.save_state()
         else:
             print("❓ Unbekannte Geste")
 
@@ -51,3 +61,26 @@ class SmartHomeController:
 
     def blinds_close(self):
         self.blinds.close()
+
+    def get_state(self):
+        """Gibt den aktuellen Zustand des Smart Homes zurück."""
+
+        return {
+            "light": self.light.is_on,
+            "blinds": self.blinds.is_open,
+            "temperature": self.temperature.value,
+            "motion": self.motion_sensor.detected,
+            "last_gesture": self.last_gesture
+        }
+
+    def save_state(self):
+        """Speichert den aktuellen Zustand des Smart Homes."""
+
+        self.state_file.parent.mkdir(exist_ok=True)
+
+        with open(self.state_file, "w", encoding="utf-8") as file:
+            json.dump(
+                self.get_state(),
+                file,
+                indent=4
+            )
