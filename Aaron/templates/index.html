@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Smart Home Dashboard</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
+
+</head>
+
+<body>
+
+<div class="background"></div>
+
+<div class="container">
+
+<header>
+
+    <div class="header-left">
+
+        <h1>SMART HOME</h1>
+
+        <p>Gestenerkennung · MQTT · Sensorik</p>
+
+    </div>
+
+    <div class="header-right">
+
+        <div class="live-status">
+
+            <span class="live-dot"></span>
+
+            ONLINE
+
+        </div>
+
+    </div>
+
+</header>
+
+<section class="cards">
+
+    <div class="card">
+
+        <div class="card-header">
+
+            <span class="material-symbols-outlined">
+                lightbulb
+            </span>
+
+            <span>Licht</span>
+
+        </div>
+
+        <div id="light"
+             class="card-value {{ 'on' if state.light else 'off' }}">
+
+            {{ "EIN" if state.light else "AUS" }}
+
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <div class="card-header">
+
+            <span class="material-symbols-outlined">
+                blinds
+            </span>
+
+            <span>Rollo</span>
+
+        </div>
+
+        <div id="blinds"
+             class="card-value {{ 'on' if state.blinds else 'off' }}">
+
+            {{ "GEÖFFNET" if state.blinds else "GESCHLOSSEN" }}
+
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <div class="card-header">
+
+            <span class="material-symbols-outlined">
+                thermostat
+            </span>
+
+            <span>Temperatur</span>
+
+        </div>
+
+        <div class="temperature">
+
+            <span id="temperature"
+                  class="temperature-value">
+
+                {{ state.temperature }}
+
+            </span>
+
+            <span class="temperature-unit">
+
+                °C
+
+            </span>
+
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <div class="card-header">
+
+            <span class="material-symbols-outlined">
+                directions_walk
+            </span>
+
+            <span>Bewegung</span>
+
+        </div>
+
+        <div id="motion"
+             class="card-value {{ 'on' if state.motion else 'off' }}">
+
+            {{ "ERKANNT" if state.motion else "KEINE" }}
+
+        </div>
+
+    </div>
+
+</section>
+
+<section class="gesture-card">
+
+    <div class="gesture-header">
+
+        <span class="material-symbols-outlined">
+            front_hand
+        </span>
+
+        <span>Letzte erkannte Geste</span>
+
+    </div>
+
+    <div id="gestureText" class="gesture-value">
+
+        {{ state.last_gesture }}
+
+    </div>
+
+</section>
+
+<section class="system-status">
+
+    <div class="status-item">
+
+        <span class="status-dot"></span>
+
+        MQTT verbunden
+
+    </div>
+
+    <div class="status-item">
+
+        <span class="status-dot"></span>
+
+        Dashboard aktiv
+
+    </div>
+
+    <div class="status-item">
+
+        <span class="status-dot"></span>
+
+        Sensoren online
+
+    </div>
+
+</section>
+
+<footer>
+
+    <div class="footer-left">
+
+        Smart Home Dashboard
+
+    </div>
+
+    <div class="footer-right">
+
+        Letzte Aktualisierung:
+        <span id="clock">--:--:--</span>
+
+    </div>
+
+</footer>
+
+</div>
+
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+
+</body>
+
+</html>

@@ -1,7 +1,7 @@
 {
     "light": false,
-    "blinds": true,
-    "temperature": 24.7,
-    "motion": false,
-    "last_gesture": "Closed_Fist"
+    "blinds": false,
+    "temperature": 20.5,
+    "motion": true,
+    "last_gesture": "-"
 }
