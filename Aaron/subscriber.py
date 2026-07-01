@@ -11,9 +11,11 @@ Projekt: Smart Home Steuerung mittels Gestenerkennung
 import paho.mqtt.client as mqtt
 
 from config import Config
+from controller.smart_home_controller import SmartHomeController
 
 
 config = Config()
+controller = SmartHomeController()
 
 
 def on_connect(client, userdata, flags, reason_code, properties=None):
@@ -22,31 +24,35 @@ def on_connect(client, userdata, flags, reason_code, properties=None):
     print("✅ Mit MQTT-Broker verbunden")
 
     client.subscribe(config.gesture_topic)
+    client.subscribe(config.temperature_topic)
+    client.subscribe(config.motion_topic)
 
-    print(f"👂 Lausche auf: {config.gesture_topic}")
+    print("👂 Lausche auf:")
+
+    print(f"   🎯 Gesten:      {config.gesture_topic}")
+    print(f"   🌡️ Temperatur: {config.temperature_topic}")
+    print(f"   🚶 Bewegung:   {config.motion_topic}")
 
 
 def on_message(client, userdata, message):
     """Wird bei jeder empfangenen Nachricht aufgerufen."""
 
-    gesture = message.payload.decode()
+    topic = message.topic
+    payload = message.payload.decode()
 
-    print(f"\n📩 Empfangen: {gesture}")
+    print(f"\n📩 [{topic}] {payload}")
 
-    if gesture == "Open_Palm":
-        print("💡 Licht EIN")
+    if topic == config.gesture_topic:
 
-    elif gesture == "Closed_Fist":
-        print("💡 Licht AUS")
+        controller.handle_gesture(payload)
 
-    elif gesture == "Thumb_Up":
-        print("🎵 Musik EIN")
+    elif topic == config.temperature_topic:
 
-    elif gesture == "Victory":
-        print("📺 TV-Modus")
+        controller.temperature.update(float(payload))
 
-    else:
-        print("❓ Unbekannte Geste")
+    elif topic == config.motion_topic:
+
+        controller.motion_sensor.update(payload == "motion")
 
 
 def main():

@@ -2,7 +2,11 @@
   "mqtt": {
     "broker": "broker.hivemq.com",
     "port": 1883,
+
     "gesture_topic": "aaron/smarthome/gesture",
+    "temperature_topic": "aaron/smarthome/temperature",
+    "motion_topic": "aaron/smarthome/motion",
+
     "debug_topic": "aaron/smarthome/debug"
   },
   "mediapipe": {

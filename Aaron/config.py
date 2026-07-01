@@ -52,6 +52,17 @@ class Config:
             "gesture_topic",
             "gesture"
         )
+
+        self.temperature_topic = data["mqtt"].get(
+            "temperature_topic",
+            "temperature"
+        )
+
+        self.motion_topic = data["mqtt"].get(
+            "motion_topic",
+            "motion"
+        )
+
         self.debug_topic = data["mqtt"].get(
             "debug_topic",
             "debug"

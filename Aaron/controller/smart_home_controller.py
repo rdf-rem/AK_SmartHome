@@ -9,19 +9,25 @@ Projekt: Smart Home Steuerung mittels Gestenerkennung
 """
 
 from devices.light import Light
-from devices.music import Music
-from devices.tv import TV
+from devices.blinds import Blinds
+from devices.temperature import Temperature
+from devices.motion_sensor import MotionSensor
 
 
 class SmartHomeController:
 
     def __init__(self):
 
+        self.light = Light()
+        self.blinds = Blinds()
+        self.temperature = Temperature()
+        self.motion_sensor = MotionSensor()
+
         self.actions = {
             "Open_Palm": self.light_on,
             "Closed_Fist": self.light_off,
-            "Thumb_Up": self.music_on,
-            "Victory": self.tv_mode
+            "Thumb_Up": self.blinds_open,
+            "Victory": self.blinds_close
         }
 
     def handle_gesture(self, gesture):
@@ -35,13 +41,13 @@ class SmartHomeController:
             print("❓ Unbekannte Geste")
 
     def light_on(self):
-        print("💡 Licht EIN")
+        self.light.on()
 
     def light_off(self):
-        print("💡 Licht AUS")
+        self.light.off()
 
-    def music_on(self):
-        print("🎵 Musik EIN")
+    def blinds_open(self):
+        self.blinds.open()
 
-    def tv_mode(self):
-        print("📺 TV-Modus")
+    def blinds_close(self):
+        self.blinds.close()
