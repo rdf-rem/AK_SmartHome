@@ -1,0 +1,6 @@
+#   ESP32-Pin       #       Bauteil     #
+#       25          #       rgb1-r      # (LED)
+#       26          #       rgb1-g      # (LED)
+#       27          #       rgb1-b      # (LED)
+#       GND         #       rgb1-com    # (LED)
+#       
