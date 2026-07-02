@@ -1,5 +1,6 @@
 //====================================
 // Smart Home Projekt
+// Version 1.6 -- Schritt 4: Sensordaten publishen
 //====================================
 #include <WiFi.h>
 #include <PubSubClient.h>

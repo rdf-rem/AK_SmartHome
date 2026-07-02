@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ak_smarthome — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
+<style>
+  :root {
+    --bg1: #061a1a;
+    --bg2: #071522;
+    --bg3: #051f16;
+    --card: rgba(16, 42, 45, 0.55);
+    --card-border: rgba(94, 226, 200, 0.14);
+    --line: #4fe0c4;
+    --line-dim: #2c5a52;
+    --warm: #ffcf6b;
+    --cool: #5ec8ff;
+    --humid: #4fd1c5;
+    --alert: #ff7a5c;
+    --text: #eaf6f2;
+    --text-muted: #7fa89c;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: 'IBM Plex Sans', sans-serif;
+    color: var(--text);
+    background:
+      radial-gradient(circle at 15% 10%, rgba(79,224,196,0.10), transparent 45%),
+      radial-gradient(circle at 85% 90%, rgba(94,150,255,0.10), transparent 50%),
+      linear-gradient(155deg, var(--bg2) 0%, var(--bg1) 45%, var(--bg3) 100%);
+    background-attachment: fixed;
+  }
+
+  .mono { font-family: 'Space Mono', monospace; }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 24px 60px; }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 1px solid var(--card-border);
+    padding-bottom: 18px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  header h1 {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: 0.08em;
+    margin: 0;
+  }
+  header h1 span { color: var(--line); }
+  header p { margin: 4px 0 0; color: var(--text-muted); font-size: 13px; }
+
+  .status-pill {
+    display: flex; align-items: center; gap: 8px;
+    font-family: 'Space Mono', monospace; font-size: 12px; letter-spacing: 0.04em;
+    padding: 7px 14px; border: 1px solid var(--card-border); border-radius: 999px;
+    background: var(--card); backdrop-filter: blur(6px);
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--alert); transition: background 0.3s; }
+  .dot.connected { background: #4fe0a0; box-shadow: 0 0 8px #4fe0a0; }
+
+  .section-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 15px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--line);
+    margin: 0 0 18px;
+  }
+
+  /* ---------- Card grid ---------- */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+  }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 18px;
+    padding: 26px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 20px 40px -20px rgba(0,0,0,0.5);
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--text-muted); margin: 0 0 18px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .card-state { color: var(--text); font-size: 11px; }
+
+  .card-body {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ---------- Buttons ---------- */
+  .btn-group { display: flex; gap: 8px; justify-content: center; margin-top: 20px; }
+  button {
+    font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.06em;
+    background: transparent; border: 1px solid var(--line-dim); color: var(--text-muted);
+    padding: 9px 16px; border-radius: 8px; cursor: pointer; transition: all 0.2s;
+  }
+  button:hover { border-color: var(--line); color: var(--text); }
+  button:focus-visible { outline: 2px solid var(--line); outline-offset: 2px; }
+  button.active-warm { border-color: var(--warm); color: var(--warm); background: rgba(255,207,107,0.1); }
+  button.active-cool { border-color: var(--cool); color: var(--cool); background: rgba(94,200,255,0.1); }
+
+  /* ---------- Bulb (big) ---------- */
+  .bulb-wrap { position: relative; width: 180px; height: 180px; display: flex; align-items: center; justify-content: center; }
+  .bulb-halo {
+    position: absolute; width: 180px; height: 180px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,207,107,0.5), transparent 70%);
+    opacity: 0; transition: opacity 0.5s;
+  }
+  .bulb-halo.on { opacity: 1; }
+  .bulb-body { fill: none; stroke: var(--line-dim); stroke-width: 3.5; transition: stroke 0.4s, filter 0.4s; }
+  .bulb-body.on { stroke: var(--warm); filter: drop-shadow(0 0 10px rgba(255,207,107,0.7)); }
+  .bulb-filament { stroke: var(--line-dim); stroke-width: 2.5; transition: stroke 0.4s; }
+  .bulb-filament.on { stroke: var(--warm); }
+  .bulb-ray { stroke: var(--line-dim); stroke-width: 3; stroke-linecap: round; opacity: 0.25; transition: opacity 0.4s, stroke 0.4s; }
+  .bulb-ray.on { stroke: var(--warm); opacity: 1; }
+
+  /* ---------- Blinds (big, vertical slats over window) ---------- */
+  .blinds-wrap { position: relative; }
+  .blind-frame { fill: var(--line-dim); opacity: 0.5; }
+  .window-frame { fill: rgba(94,200,255,0.06); stroke: var(--line-dim); stroke-width: 2.5; }
+  .window-glare { stroke: var(--line-dim); stroke-width: 2; opacity: 0.4; }
+  .rail-track { stroke: var(--line-dim); stroke-width: 2; stroke-dasharray: 1.5 5; stroke-linecap: round; opacity: 0.5; }
+  .blind-slats { transform-origin: left; transition: transform 0.6s ease; }
+  .blind-slats.open { transform: scaleX(0.14); }
+  .blind-slat { fill: var(--cool); stroke: none; transition: fill 0.4s; filter: drop-shadow(0 0 4px rgba(94,200,255,0.4)); }
+  .blind-slats.open .blind-slat { fill: var(--line-dim); filter: none; }
+
+  /* ---------- Klima card ---------- */
+  .klima-body { flex-direction: column; gap: 18px; width: 100%; }
+  .klima-row { display: flex; align-items: center; gap: 20px; width: 100%; }
+  .klima-value { font-family: 'Space Mono', monospace; font-weight: 700; font-size: 34px; color: var(--text); }
+  .klima-unit { font-size: 15px; color: var(--text-muted); margin-left: 4px; }
+  .divider { height: 1px; background: var(--card-border); width: 100%; }
+
+  .therm-outline { fill: none; stroke: var(--line-dim); stroke-width: 3; }
+  .therm-fill { transition: height 0.6s ease, y 0.6s ease, fill 0.6s ease; }
+
+  .drop-outline { fill: none; stroke: var(--line-dim); stroke-width: 3; }
+  .drop-fill { fill: var(--humid); transition: height 0.6s ease, y 0.6s ease; }
+
+  /* ---------- Motion (big glow) ---------- */
+  .motion-wrap { position: relative; width: 180px; height: 180px; display: flex; align-items: center; justify-content: center; }
+  .motion-halo {
+    position: absolute; width: 180px; height: 180px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,122,92,0.55), transparent 70%);
+    opacity: 0; transition: opacity 0.4s;
+  }
+  .motion-halo.on { opacity: 1; }
+  @keyframes pulse-ring { 0% { opacity: 0.8; transform: scale(0.9);} 100% { opacity: 0; transform: scale(1.5);} }
+  .motion-pulse { position: absolute; width: 90px; height: 90px; border-radius: 50%; border: 2px solid var(--alert); opacity: 0; }
+  .motion-pulse.on { animation: pulse-ring 1.6s ease-out infinite; }
+  .motion-icon { stroke: var(--line-dim); stroke-width: 3; fill: none; transition: stroke 0.4s, filter 0.4s; }
+  .motion-icon.on { stroke: var(--alert); filter: drop-shadow(0 0 10px rgba(255,122,92,0.7)); }
+
+  .footer-label {
+    text-align: center; margin-top: 16px; font-family: 'Space Mono', monospace;
+    font-size: 12px; letter-spacing: 0.08em; color: var(--text-muted);
+  }
+  .footer-label.on-warm { color: var(--warm); }
+  .footer-label.on-cool { color: var(--cool); }
+  .footer-label.on-alert { color: var(--alert); }
+
+  /* ---------- Log ---------- */
+  .panel { background: var(--card); border: 1px solid var(--card-border); border-radius: 18px; padding: 22px; margin-top: 22px; backdrop-filter: blur(10px); }
+  #log { max-height: 200px; overflow-y: auto; display: flex; flex-direction: column-reverse; }
+  .log-entry { font-family: 'Space Mono', monospace; font-size: 11.5px; color: var(--text-muted); padding: 5px 0; border-top: 1px solid var(--card-border); display: flex; gap: 10px; }
+  .log-entry:last-child { border-top: none; }
+  .log-time { color: var(--line-dim); flex-shrink: 0; }
+  .log-topic { color: var(--line); flex-shrink: 0; }
+  .log-payload { color: var(--text); }
+  .empty-log { color: var(--text-muted); font-size: 12px; padding: 8px 0; }
+  #log::-webkit-scrollbar { width: 5px; }
+  #log::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header>
+    <div>
+      <h1><span>ak_</span>smarthome — Dashboard</h1>
+      <p>broker.hivemq.com &middot; Topic-Präfix <span class="mono">ak_smarthome/</span></p>
+    </div>
+    <div class="status-pill">
+      <div class="dot" id="statusDot"></div>
+      <span id="statusText">VERBINDE...</span>
+    </div>
+  </header>
+
+  <h2 class="section-title">Wohnung</h2>
+
+  <div class="grid">
+
+    <!-- 1: Licht -->
+    <div class="card">
+      <p class="card-label">Licht <span class="card-state" id="lightState">AUS</span></p>
+      <div class="card-body">
+        <div class="bulb-wrap">
+          <div class="bulb-halo" id="bulbHalo"></div>
+          <svg width="150" height="150" viewBox="0 0 150 150">
+            <line class="bulb-ray" id="ray1" x1="75" y1="8"  x2="75" y2="24"/>
+            <line class="bulb-ray" id="ray2" x1="30" y1="20" x2="40" y2="32"/>
+            <line class="bulb-ray" id="ray3" x1="120" y1="20" x2="110" y2="32"/>
+            <line class="bulb-ray" id="ray4" x1="14" y1="60" x2="30" y2="60"/>
+            <line class="bulb-ray" id="ray5" x1="136" y1="60" x2="120" y2="60"/>
+            <path class="bulb-body" id="bulbBody" d="M75 34c-22 0-36 16-36 34 0 16 10 24 15 30 4 5 6 9 6 14h30c0-5 2-9 6-14 5-6 15-14 15-30 0-18-14-34-36-34z"/>
+            <line class="bulb-filament" id="f1" x1="62" y1="60" x2="88" y2="80"/>
+            <line class="bulb-filament" id="f2" x1="88" y1="60" x2="62" y2="80"/>
+            <line class="bulb-body" x1="60" y1="120" x2="90" y2="120"/>
+            <line class="bulb-body" x1="63" y1="128" x2="87" y2="128"/>
+            <line class="bulb-body" x1="66" y1="136" x2="84" y2="136"/>
+          </svg>
+        </div>
+      </div>
+      <div class="btn-group">
+        <button id="btnLightOn" onclick="publishState('light','ON')">AN</button>
+        <button id="btnLightOff" onclick="publishState('light','OFF')">AUS</button>
+      </div>
+    </div>
+
+    <!-- 2: Rollo -->
+    <div class="card">
+      <p class="card-label">Rollo <span class="card-state" id="blindsState">ZU</span></p>
+      <div class="card-body">
+        <div class="blinds-wrap">
+          <svg width="170" height="170" viewBox="0 0 170 170">
+            <!-- Fenster (liegt hinter den Lamellen) -->
+            <rect class="window-frame" x="52" y="30" width="94" height="122" rx="4"/>
+            <line class="window-glare" x1="72" y1="46" x2="92" y2="118"/>
+            <line class="window-glare" x1="98" y1="46" x2="118" y2="118"/>
+            <!-- Schiene oben -->
+            <rect class="blind-frame" x="18" y="18" width="132" height="10" rx="3"/>
+            <!-- Laufschiene rechts (dekorativ) -->
+            <line class="rail-track" x1="150" y1="24" x2="150" y2="150"/>
+            <!-- Vertikale Lamellen -->
+            <g class="blind-slats" id="blindSlats">
+              <rect class="blind-slat" x="53"  y="30" width="11" height="122" rx="2"/>
+              <rect class="blind-slat" x="67"  y="30" width="11" height="122" rx="2"/>
+              <rect class="blind-slat" x="81"  y="30" width="11" height="122" rx="2"/>
+              <rect class="blind-slat" x="95"  y="30" width="11" height="122" rx="2"/>
+              <rect class="blind-slat" x="109" y="30" width="11" height="122" rx="2"/>
+              <rect class="blind-slat" x="123" y="30" width="11" height="122" rx="2"/>
+              <rect class="blind-slat" x="137" y="30" width="11" height="122" rx="2"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+      <div class="btn-group">
+        <button id="btnBlindsOpen" onclick="publishState('blinds','OPEN')">AUF</button>
+        <button id="btnBlindsClose" onclick="publishState('blinds','CLOSE')">ZU</button>
+      </div>
+    </div>
+
+    <!-- 3: Klima -->
+    <div class="card">
+      <p class="card-label">Klima</p>
+      <div class="card-body klima-body">
+        <div class="klima-row">
+          <svg width="46" height="90" viewBox="0 0 46 90">
+            <rect class="therm-outline" x="14" y="4" width="18" height="58" rx="9"/>
+            <circle class="therm-outline" cx="23" cy="74" r="15"/>
+            <rect class="therm-fill" id="thermFill" x="18" y="30" width="10" height="30" fill="#5ec8ff"/>
+            <circle class="therm-fill" id="thermBulb" cx="23" cy="74" r="9" fill="#5ec8ff"/>
+          </svg>
+          <div>
+            <span class="klima-value" id="tempValue">—</span><span class="klima-unit">°C Temperatur</span>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="klima-row">
+          <svg width="46" height="60" viewBox="0 0 46 60">
+            <defs>
+              <clipPath id="dropClip">
+                <path d="M23 4C23 4 8 28 8 40a15 15 0 0 0 30 0C38 28 23 4 23 4z"/>
+              </clipPath>
+            </defs>
+            <path class="drop-outline" d="M23 4C23 4 8 28 8 40a15 15 0 0 0 30 0C38 28 23 4 23 4z"/>
+            <rect class="drop-fill" id="humidityFill" x="8" y="55" width="30" height="0" clip-path="url(#dropClip)"/>
+          </svg>
+          <div>
+            <span class="klima-value" id="humidityValue">—</span><span class="klima-unit">% Luftfeuchtigkeit</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4: Bewegung -->
+    <div class="card">
+      <p class="card-label">Bewegungsmelder <span class="card-state" id="motionState">RUHIG</span></p>
+      <div class="card-body">
+        <div class="motion-wrap">
+          <div class="motion-pulse" id="motionPulse"></div>
+          <div class="motion-halo" id="motionHalo"></div>
+          <svg width="120" height="120" viewBox="0 0 120 120">
+            <circle class="motion-icon" id="motionIcon" cx="60" cy="60" r="14"/>
+            <path class="motion-icon" id="arcA" d="M35 60a25 25 0 0 1 50 0"/>
+            <path class="motion-icon" id="arcB" d="M20 60a40 40 0 0 1 80 0"/>
+          </svg>
+        </div>
+      </div>
+      <p class="footer-label" id="motionFooter">KEINE BEWEGUNG ERKANNT</p>
+    </div>
+
+  </div>
+
+  <div class="panel">
+    <p class="card-label">Live-Ereignisse</p>
+    <div id="log"><div class="empty-log">Warte auf MQTT-Nachrichten…</div></div>
+  </div>
+
+</div>
+
+<script>
+  const PREFIX = 'ak_smarthome';
+  const TOPIC_LIGHT = PREFIX + '/home/livingroom/light';
+  const TOPIC_BLINDS = PREFIX + '/home/livingroom/blinds';
+  const TOPIC_TEMP = PREFIX + '/home/kitchen/temperature';
+  const TOPIC_HUMIDITY = PREFIX + '/home/kitchen/humidity';
+  const TOPIC_PIR = PREFIX + '/home/bedroom/pir';
+  const TOPIC_BUTTON = PREFIX + '/home/button';
+
+  const statusDot = document.getElementById('statusDot');
+  const statusText = document.getElementById('statusText');
+  const logEl = document.getElementById('log');
+  let logStarted = false;
+
+  function setStatus(connected, label) {
+    statusDot.classList.toggle('connected', connected);
+    statusText.textContent = label;
+  }
+
+  function addLog(topic, payload) {
+    if (!logStarted) { logEl.innerHTML = ''; logStarted = true; }
+    const time = new Date().toLocaleTimeString('de-DE');
+    const short = topic.replace(PREFIX + '/', '');
+    const row = document.createElement('div');
+    row.className = 'log-entry';
+    row.innerHTML = '<span class="log-time">' + time + '</span>' +
+                     '<span class="log-topic">' + short + '</span>' +
+                     '<span class="log-payload">' + payload + '</span>';
+    logEl.prepend(row);
+    while (logEl.children.length > 25) logEl.removeChild(logEl.lastChild);
+  }
+
+  // ---------- Licht ----------
+  function setLight(on) {
+    document.getElementById('bulbHalo').classList.toggle('on', on);
+    document.getElementById('bulbBody').classList.toggle('on', on);
+    document.getElementById('f1').classList.toggle('on', on);
+    document.getElementById('f2').classList.toggle('on', on);
+    ['ray1','ray2','ray3','ray4','ray5'].forEach(id => document.getElementById(id).classList.toggle('on', on));
+    document.getElementById('lightState').textContent = on ? 'AN' : 'AUS';
+    document.getElementById('btnLightOn').classList.toggle('active-warm', on);
+    document.getElementById('btnLightOff').classList.toggle('active-warm', !on);
+  }
+
+  // ---------- Rollo ----------
+  function setBlinds(open) {
+    document.getElementById('blindSlats').classList.toggle('open', open);
+    document.getElementById('blindsState').textContent = open ? 'AUF' : 'ZU';
+    document.getElementById('btnBlindsOpen').classList.toggle('active-cool', open);
+    document.getElementById('btnBlindsClose').classList.toggle('active-cool', !open);
+  }
+
+  // ---------- Temperatur ----------
+  function setTemperature(value) {
+    const t = parseFloat(value);
+    if (isNaN(t)) return;
+    document.getElementById('tempValue').textContent = t.toFixed(1);
+    const clamped = Math.max(0, Math.min(40, t));
+    const ratio = clamped / 40;
+    const h = ratio * 50;
+    const fill = document.getElementById('thermFill');
+    fill.setAttribute('height', h);
+    fill.setAttribute('y', 60 - h);
+    const color = ratio < 0.4 ? '#5ec8ff' : ratio < 0.7 ? '#ffcf6b' : '#ff7a5c';
+    fill.setAttribute('fill', color);
+    document.getElementById('thermBulb').setAttribute('fill', color);
+  }
+
+  // ---------- Luftfeuchtigkeit ----------
+  function setHumidity(value) {
+    const h = parseFloat(value);
+    if (isNaN(h)) return;
+    document.getElementById('humidityValue').textContent = h.toFixed(0);
+    const ratio = Math.max(0, Math.min(1, h / 100));
+    const dropHeight = ratio * 51;
+    const fill = document.getElementById('humidityFill');
+    fill.setAttribute('height', dropHeight);
+    fill.setAttribute('y', 55 - dropHeight);
+  }
+
+  // ---------- Bewegung ----------
+  function setMotion(active) {
+    document.getElementById('motionHalo').classList.toggle('on', active);
+    document.getElementById('motionPulse').classList.toggle('on', active);
+    document.getElementById('motionIcon').classList.toggle('on', active);
+    document.getElementById('arcA').classList.toggle('on', active);
+    document.getElementById('arcB').classList.toggle('on', active);
+    document.getElementById('motionState').textContent = active ? 'AKTIV' : 'RUHIG';
+    const footer = document.getElementById('motionFooter');
+    footer.textContent = active ? 'BEWEGUNG ERKANNT' : 'KEINE BEWEGUNG ERKANNT';
+    footer.classList.toggle('on-alert', active);
+  }
+
+  // ---------- MQTT ----------
+  const clientId = 'dashboard-' + PREFIX + '-' + Math.random().toString(16).slice(2, 8);
+  const client = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', { clientId });
+
+  client.on('connect', () => {
+    setStatus(true, 'VERBUNDEN');
+    client.subscribe(PREFIX + '/#');
+  });
+  client.on('reconnect', () => setStatus(false, 'VERBINDE NEU...'));
+  client.on('close', () => setStatus(false, 'GETRENNT'));
+  client.on('error', () => setStatus(false, 'FEHLER'));
+
+  client.on('message', (topic, payloadBuf) => {
+    const payload = payloadBuf.toString();
+    addLog(topic, payload);
+    if (topic === TOPIC_LIGHT) setLight(payload === 'ON');
+    if (topic === TOPIC_BLINDS) setBlinds(payload === 'OPEN');
+    if (topic === TOPIC_TEMP) setTemperature(payload);
+    if (topic === TOPIC_HUMIDITY) setHumidity(payload);
+    if (topic === TOPIC_PIR) setMotion(payload === 'MOTION');
+    if (topic === TOPIC_BUTTON) addLog(topic, payload + ' (Taster am ESP32)');
+  });
+
+  function publishState(device, value) {
+    if (!client.connected) return;
+    const topic = device === 'light' ? TOPIC_LIGHT : TOPIC_BLINDS;
+    client.publish(topic, value);
+  }
+</script>
+
+</body>
+</html>
