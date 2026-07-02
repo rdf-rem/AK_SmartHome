@@ -1,242 +1,250 @@
-# 🏠 Aaron's Smart-Home Dashboard
+## Smart Home Steuerung mittels Gestenerkennung
 
-Interaktives Web-Dashboard zur Visualisierung und Kontrolle des Smart-Home-Systems in Echtzeit.
+# Quickstart
 
-## Technologie
+1. MQTT starten                         -> subscriber.py
+2. Sensorsimulation aktivieren          -> sensor_publisher.py
+3. Dashboard aktivieren                 -> dashboard.py
+4. Gestenerkennung/Kamera starten       -> app.py
+5. Dashboard im Browser öffnen (auf dem Handy ist die IP Adresse des Rechners notwendig)
 
-- **Backend:** Flask + Flask-SocketIO
-- **Frontend:** HTML5 + CSS3 + JavaScript
-- **Real-time:** WebSocket (Socket.IO)
-- **MQTT-Integration:** paho-mqtt
-- **Design:** Responsive & Modern
+---
 
-## Features
+# Projektbeschreibung
 
-### 📊 Visualisierung
-- **Wohnzimmer:** Licht, Rollos (Slider), Temperatur, Luftfeuchtigkeit
-- **Schlafzimmer:** Licht, Bewegungsmelder (PIR), Temperatur
-- **Küche:** Licht, Temperatur
-- **Live MQTT-Status:** Anzeige des Broker-Verbindungsstatus
-- **Gesterkennung:** Anzeige der erkannten Gesten in Echtzeit
+Dieses Projekt demonstriert die Steuerung eines Smart Homes mithilfe von Handgesten. Die Gestenerkennung erfolgt über eine Webcam und MediaPipe. Erkannte Gesten werden über das MQTT-Protokoll übertragen und steuern verschiedene Smart-Home-Komponenten wie Licht und Rollos. Zusätzlich werden Temperatur- und Bewegungsdaten simuliert und in einem webbasierten Dashboard visualisiert.
 
-### 🎮 Steuerung
-- Licht ein/aus schalten
-- Rollos öffnen/schließen (mit Slider)
-- Responsive Design für Desktop & Mobile
+Das Projekt entstand im Rahmen des Moduls **Angewandte Kommunikation**.
 
-### 📡 Real-time Updates
-- WebSocket-Verbindung zum Backend
-- Automatische UI-Updates bei Datenaenderung
-- 2-Sekunden-Refresh-Zyklus
+---
 
-## Installation
+# Projektfunktionen
 
-### Voraussetzungen
-- Python 3.8+
-- Installierte Pakete: `flask`, `flask-socketio`, `python-socketio`, `python-engineio`, `paho-mqtt`
+Folgende Funktionen wurden umgesetzt:
 
-Installation bereits durchgeführt (siehe Setup-Anleitung).
+- Handgestenerkennung mittels MediaPipe
+- Steuerung von Licht und Rollos über Gesten
+- MQTT-Kommunikation zwischen den Komponenten
+- Simulation eines Temperatursensors
+- Simulation eines Bewegungsmelders
+- Smart-Home-Controller zur Verarbeitung aller Befehle
+- Web-Dashboard mit Live-Anzeige
+- Responsive Benutzeroberfläche im Dark Theme
 
-## Starten
+---
 
-### Terminal-Befehl
+# Verwendete Technologien
 
-```bash
-cd c:\Users\diosd\Documents\VisualStudioCode\AK_SmartHome\Aaron
+- Python 3.14
+- MediaPipe
+- OpenCV
+- Flask
+- MQTT (Paho MQTT)
+- HTML5
+- CSS3
+- JavaScript
+- JSON
 
-# Mit dem Python-Executable der virtuellen Umgebung:
-c:/Users/diosd/Documents/VisualStudioCode/AK_SmartHome/Aaron/.venv/Scripts/python.exe dashboard/app.py
+---
+
+# Projektstruktur
+
+```
+AK_SmartHome/
+│
+├── app.py
+├── dashboard.py
+├── subscriber.py
+├── sensor_publisher.py
+├── config.py
+├── config.json
+├── README.md
+│
+├── controller/
+│       smart_home_controller.py
+│
+├── devices/
+│       light.py
+│       blinds.py
+│       temperature.py
+│       motion_sensor.py
+│
+├── gesture/
+│       camera.py
+│       recognizer.py
+│       gesture_recognition.py
+│
+├── mqtt/
+│       mqtt_client.py
+│
+├── templates/
+│       index.html
+│
+├── static/
+│       style.css
+│       dashboard.js
+│
+├── data/
+│       state.json
+│
+└── models/
+        gesture_recognizer.task
 ```
 
-### Browser öffnen
+---
 
-Nach dem Start öffne deinen Browser und gehe zu:
+# Installation
+
+Repository herunterladen oder klonen.
+
+Benötigte Bibliotheken installieren:
+
+```bash
+pip install mediapipe
+pip install opencv-python
+pip install flask
+pip install paho-mqtt
+```
+
+---
+
+# Projekt starten
+
+## MQTT-Broker starten
+
+Es wird ein MQTT-Broker benötigt (z. B. Mosquitto).
+
+---
+
+## Subscriber starten
+
+```bash
+python subscriber.py
+```
+
+---
+
+## Sensor-Simulation starten
+
+```bash
+python sensor_publisher.py
+```
+
+---
+
+## Dashboard starten
+
+```bash
+python dashboard.py
+```
+
+Dashboard im Browser öffnen:
+
 ```
 http://127.0.0.1:5000
 ```
 
-### Terminal-Output
+---
 
+## Gestenerkennung starten
+
+```bash
+python app.py
 ```
-=== Smart-Home Dashboard ===
-🌐 Starte auf http://127.0.0.1:5000
-📡 MQTT Broker: broker.hivemq.com:1883
-
-✓ Running on http://127.0.0.1:5000
-✓ MQTT verbunden
-```
-
-## MQTT Integration
-
-### Empfangene Topics
-
-Das Dashboard abonniert alle Topics unter `aaron/smarthome/#`:
-
-```
-aaron/smarthome/gesture          → Gesterkennung
-aaron/smarthome/livingroom/light → Wohnzimmerlicht
-aaron/smarthome/bedroom/light    → Schlafzimmerlicht
-aaron/smarthome/kitchen/light    → Küchenlicht
-aaron/smarthome/livingroom/blinds → Rollos
-aaron/smarthome/kitchen/temperature → Temperatur (Küche)
-aaron/smarthome/bedroom/temperature → Temperatur (Schlafzimmer)
-aaron/smarthome/bedroom/pir      → Bewegungsmelder
-aaron/smarthome/livingroom/humidity → Luftfeuchtigkeit
-```
-
-### Payload-Format
-
-Beispiel für Gesten:
-```json
-{
-  "gesture": "PEACE",
-  "timestamp": 1698765432.123
-}
-```
-
-Beispiel für Licht:
-```json
-{
-  "state": true,
-  "timestamp": 1698765432.123
-}
-```
-
-Beispiel für Temperatur:
-```json
-{
-  "value": 22.5,
-  "timestamp": 1698765432.123
-}
-```
-
-## Dateien & Struktur
-
-```
-dashboard/
-├── app.py                          # Flask Backend + MQTT Client
-├── templates/
-│   └── index.html                  # Dashboard HTML UI
-└── static/
-    ├── style.css                   # Styling & Layout
-    └── dashboard.js                # WebSocket & Interaktion
-```
-
-## Features im Detail
-
-### Licht-Steuerung
-- Button zeigt aktuellen Zustand (EIN/AUS)
-- Click sendet Toggle-Befehl an Backend
-
-### Rollo-Slider
-- 0-100% Schieberegler
-- Live-Anzeige des Prozentsatzes
-- Status-Text: Geschlossen / Teilweise offen / Geöffnet
-
-### Sensoren
-- Temperatur mit Dezimalanzeige
-- Luftfeuchtigkeit als Prozentangabe
-- PIR-Sensor mit Animations-Indicator
-
-### Gesterkennung
-- Zeigt letzte erkannte Geste für 3 Sekunden
-- Automatisches Zurücksetzen
-
-## Fehlerbehebung
-
-| Problem | Lösung |
-|---------|--------|
-| Port 5000 bereits in Benutzung | Andere App schließen oder anderen Port verwenden: `socketio.run(app, port=5001)` |
-| MQTT-Verbindung fehlgeschlagen | Broker erreichbar? `ping broker.hivemq.com` |
-| Dashboard lädt nicht | Browser Cache leeren (Ctrl+Shift+Delete) |
-| WebSocket-Fehler | Browser-Konsole überprüfen (F12 → Console) |
-| Daten aktualisieren nicht | ESP32/MediaPipe publizieren korrekt? MQTT-Tester verwenden |
-
-## Backend-Anpassungen
-
-### Neuen Room hinzufügen
-
-In `app.py`:
-```python
-dashboard_state = {
-    ...
-    "neuer_raum": {
-        "light": False,
-        "temperature": 0
-    }
-}
-```
-
-### Neues Topic verarbeiten
-
-In `on_mqtt_message()`:
-```python
-elif "neuer_topic" in topic:
-    value = payload.get("value")
-    dashboard_state["raum"]["device"] = value
-    socketio.emit('update', dashboard_state, broadcast=True)
-```
-
-### Broker wechseln
-
-In `app.py`:
-```python
-MQTT_BROKER = "dein-broker.com"  # Ändern
-MQTT_PORT = 1883
-```
-
-## Frontend-Anpassungen
-
-### CSS-Farben ändern
-
-In `style.css`:
-```css
-:root {
-    --primary: #2196F3;    /* Hauptfarbe */
-    --success: #4CAF50;    /* Erfolg */
-    --danger: #f44336;     /* Fehler */
-    ...
-}
-```
-
-### Neues Device hinzufügen
-
-In `index.html`:
-```html
-<div class="device neues-device">
-    <div class="device-icon">🔌</div>
-    <div class="device-info">
-        <h3>Gerät</h3>
-        <p id="status">Status</p>
-    </div>
-</div>
-```
-
-## Performance-Tipps
-
-- Refresh-Zyklus anpassen (dashboard.js Zeile ~200)
-- Min-Detection-Confidence in MediaPipe erhöhen
-- MQTT QoS-Level überprüfen
-
-## Integration mit MediaPipe
-
-MediaPipe publiziert Gesten zu `aaron/smarthome/gesture`:
-- Diese werden im Dashboard in Echtzeit angezeigt
-- Optional können darauf automatische Aktionen reagieren
-
-## Integration mit ESP32
-
-ESP32 sollte folgende Topics abonnieren:
-- `aaron/smarthome/*/light` → LED steuern
-- `aaron/smarthome/livingroom/blinds` → Servo bewegen
-- `aaron/smarthome/gesture` → Spezialaktionen
-
-## Weitere Ressourcen
-
-- [Flask-SocketIO Dokumentation](https://flask-socketio.readthedocs.io/)
-- [Socket.IO Client](https://socket.io/)
-- [MQTT Topics Best Practice](https://mosquitto.org/documentation/)
 
 ---
 
-**Aaron's Smart-Home System** | Projektabgabe 2026
+# Gestensteuerung
+
+| Geste | Funktion |
+|--------|----------|
+| Open_Palm | Licht einschalten |
+| Closed_Fist | Licht ausschalten |
+| Thumb_Up | Rollo öffnen |
+| Victory | Rollo schließen |
+
+---
+
+# MQTT-Kommunikation
+
+Verwendete Topics:
+
+| Topic | Beschreibung |
+|--------|--------------|
+| aaron/smarthome/gesture | Gestenerkennung |
+| aaron/smarthome/temperature | Temperatur |
+| aaron/smarthome/motion | Bewegungsmelder |
+
+---
+
+# Dashboard
+
+Das Dashboard zeigt den aktuellen Zustand des Smart Homes in Echtzeit.
+
+Angezeigt werden:
+
+- Lichtstatus
+- Rollostatus
+- Temperatur
+- Bewegung
+- Letzte erkannte Geste
+- Systemstatus
+- Uhrzeit
+
+Die Anzeige wird automatisch in regelmäßigen Abständen aktualisiert, sodass Änderungen nahezu in Echtzeit sichtbar werden.
+
+---
+
+# Projektablauf
+
+```
+Kamera
+
+↓
+
+MediaPipe
+
+↓
+
+Gestenerkennung
+
+↓
+
+MQTT
+
+↓
+
+SmartHomeController
+
+↓
+
+Geräte
+
+↓
+
+Dashboard
+```
+
+---
+
+# Autoren
+
+**Aaron**
+
+Projekt im Rahmen des Moduls **Angewandte Kommunikation**
+
+Das Projekt wurde unter Verwendung von ChatGPT als unterstützendes Werkzeug bei Konzeption, Implementierung und Dokumentation entwickelt.
+
+---
+
+# Bekannte Einschränkungen
+
+- Die Sensoren werden derzeit simuliert.
+- Das Dashboard dient der Visualisierung und Steuerung innerhalb des Projekts.
+- Für die Gestenerkennung wird eine funktionierende Webcam benötigt.
+
+---
+
+# Lizenz
+
+Dieses Projekt dient ausschließlich Ausbildungs- und Demonstrationszwecken.

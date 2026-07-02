@@ -4,6 +4,7 @@ recognizer.py
 Verwaltet die Gestenerkennung mit MediaPipe.
 
 Autor: Aaron
+Unterstützung: ChatGPT
 Projekt: Smart Home Steuerung mittels Gestenerkennung
 """
 

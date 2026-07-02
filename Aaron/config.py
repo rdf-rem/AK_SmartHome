@@ -3,7 +3,8 @@ config.py
 
 Lädt die Konfiguration aus der Datei config.json.
 
-Autor: Aaron (ChatGPT)
+Autor: Aaron
+Unterstützung: ChatGPT
 Projekt: Smart Home Steuerung mittels Gestenerkennung
 """
 

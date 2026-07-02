@@ -1,7 +1,7 @@
 {
-    "light": false,
+    "light": true,
     "blinds": false,
-    "temperature": 20.5,
-    "motion": true,
-    "last_gesture": "-"
+    "temperature": 24.3,
+    "motion": false,
+    "last_gesture": "Victory"
 }

@@ -4,6 +4,7 @@ camera.py
 Verwaltet den Zugriff auf die Webcam.
 
 Autor: Aaron
+Unterstützung: ChatGPT
 Projekt: Smart Home Steuerung mittels Gestenerkennung
 """
 
